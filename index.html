@@ -6,14 +6,14 @@
     <title>Fuel Date Calculator</title>
     <style>
         :root {
-            /* Gasoline Theme Colors */
-            --primary: #f59e0b;     /* Amber / Fuel Light Yellow */
-            --bg: #1e293b;          /* Dark Asphalt */
-            --card-bg: #0f172a;     /* Dashboard Black */
-            --text: #f8fafc;        /* Bright White */
-            --input-bg: #334155;    /* Dark Input Fields */
+            var(--primary): #f59e0b;
+            --primary: #f59e0b;     
+            --bg: #1e293b;          
+            --card-bg: #0f172a;     
+            --text: #f8fafc;        
+            --input-bg: #334155;    
             --input-border: #475569;
-            --success: #10b981;     /* Go / Refuel Green */
+            --success: #10b981;     
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -25,7 +25,6 @@
             min-height: 100vh;
             margin: 0;
             padding: 20px;
-            /* Subtle diagonal stripes to look like a construction/warning zone */
             background-image: repeating-linear-gradient(
                 45deg,
                 #1e293b,
@@ -33,15 +32,48 @@
                 #1a2433 10px,
                 #1a2433 20px
             );
+            overflow: hidden; /* Prevents scrollbars from the falling drops */
         }
+
+        /* --- BACKGROUND FUEL DROPS --- */
+        .drop {
+            position: fixed;
+            width: 15px;
+            height: 15px;
+            background: var(--primary);
+            /* This border-radius creates a teardrop shape! */
+            border-radius: 0 50% 50% 50%;
+            transform: rotate(45deg);
+            top: -50px;
+            z-index: -1; /* Keeps them behind the main card */
+            animation: fall linear infinite;
+            opacity: 0.6;
+            box-shadow: inset -2px -2px 4px rgba(0,0,0,0.3);
+        }
+        @keyframes fall {
+            0% { top: -10%; opacity: 0; }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.6; }
+            100% { top: 110%; opacity: 0; }
+        }
+        /* Position and timing for each drop */
+        .drop:nth-child(1) { left: 10%; animation-duration: 3.2s; animation-delay: 0s; }
+        .drop:nth-child(2) { left: 20%; animation-duration: 4.1s; animation-delay: 1.5s; width: 10px; height: 10px; }
+        .drop:nth-child(3) { left: 85%; animation-duration: 3.8s; animation-delay: 0.5s; }
+        .drop:nth-child(4) { left: 92%; animation-duration: 2.9s; animation-delay: 2.2s; width: 18px; height: 18px; }
+        .drop:nth-child(5) { left: 5%; animation-duration: 4.5s; animation-delay: 3s; width: 12px; height: 12px; }
+        .drop:nth-child(6) { left: 80%; animation-duration: 3.5s; animation-delay: 1.8s; }
+
+        /* --- MAIN CARD --- */
         .container {
             background-color: var(--card-bg);
             padding: 2.5rem;
             border-radius: 12px;
-            border-top: 5px solid var(--primary); /* Amber accent at the top */
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            border-top: 5px solid var(--primary); 
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8);
             max-width: 400px;
             width: 100%;
+            z-index: 10; /* Keeps card above drops */
         }
         h2 { 
             margin-top: 0; 
@@ -76,9 +108,8 @@
         }
         input[type="text"]:focus, select:focus {
             outline: none;
-            border-color: var(--primary); /* Turns amber when typing */
+            border-color: var(--primary);
         }
-        /* Number plate specific styling */
         #plate {
             text-transform: uppercase;
             letter-spacing: 2px;
@@ -98,28 +129,58 @@
             height: 1.2rem;
             accent-color: var(--primary);
         }
+
+        /* --- FANCY CALENDAR ANIMATIONS --- */
         .result {
             margin-top: 2rem;
             padding: 1.5rem;
-            background-color: rgba(16, 185, 129, 0.1); /* Faint green background */
-            border: 2px solid var(--success); /* Neon green border */
+            background-color: rgba(16, 185, 129, 0.1); 
+            border: 2px solid var(--success); 
             border-radius: 6px;
-            display: none; 
+            display: none; /* Controlled by JS */
             text-align: center;
+            transform-origin: top; /* Animates from the top down */
         }
+        
+        /* The pop-in animation for the whole box */
+        @keyframes popIn {
+            0% { transform: scaleY(0); opacity: 0; }
+            70% { transform: scaleY(1.05); opacity: 1; }
+            100% { transform: scaleY(1); opacity: 1; }
+        }
+        .result.show {
+            display: block;
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
         .result-label {
             color: #94a3b8;
             font-size: 0.9rem;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
+        
+        /* The 3D flip animation for the text */
+        @keyframes flipText {
+            0% { transform: rotateX(-90deg); opacity: 0; }
+            100% { transform: rotateX(0deg); opacity: 1; }
+        }
+        .date-wrapper {
+            perspective: 1000px; /* Gives the 3D depth to the flip */
+        }
         .date-display {
             font-size: 1.5rem;
             font-weight: 800;
             color: var(--success);
             margin: 0.75rem 0;
-            text-shadow: 0 0 10px rgba(16, 185, 129, 0.3); /* Slight neon glow */
+            text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+            display: inline-block;
         }
+        /* Applied by JS every time the date changes */
+        .date-display.flip {
+            animation: flipText 0.5s ease-out forwards;
+        }
+
         #quotaOutput {
             display: inline-block;
             background-color: var(--primary);
@@ -133,6 +194,13 @@
     </style>
 </head>
 <body>
+
+<div class="drop"></div>
+<div class="drop"></div>
+<div class="drop"></div>
+<div class="drop"></div>
+<div class="drop"></div>
+<div class="drop"></div>
 
 <div class="container">
     <h2>⛽ Fuel Tracker</h2>
@@ -157,7 +225,9 @@
 
     <div class="result" id="resultBox">
         <div class="result-label">Next Available Date</div>
-        <div class="date-display" id="dateOutput">-</div>
+        <div class="date-wrapper">
+            <div class="date-display" id="dateOutput">-</div>
+        </div>
         <div id="quotaOutput">Quota: -</div>
     </div>
 </div>
@@ -169,7 +239,6 @@
     const resultBox = document.getElementById('resultBox');
     const dateOutput = document.getElementById('dateOutput');
     const quotaOutput = document.getElementById('quotaOutput');
-
     plateInput.addEventListener('input', calculateDate);
     typeInput.addEventListener('change', calculateDate);
     refueledInput.addEventListener('change', calculateDate);
@@ -182,11 +251,14 @@
         const match = plate.match(/\d(?=[^\d]*$)/);
         
         if (!match) {
-            resultBox.style.display = 'none';
+            resultBox.classList.remove('show');
             return;
         }
 
-        resultBox.style.display = 'block';
+        // Add the 'show' class to trigger the box pop-in animation
+        if (!resultBox.classList.contains('show')) {
+            resultBox.classList.add('show');
+        }
 
         const lastDigit = parseInt(match[0], 10);
         const isUserOdd = lastDigit % 2 !== 0; 
@@ -211,9 +283,19 @@
 
         const quota = type === 'car' ? '15 Liters' : '5 Liters';
         const options = { weekday: 'long', month: 'short', day: 'numeric' }; 
+        const newDateText = checkDate.toLocaleDateString(undefined, options);
+
+        // Only run the text flip animation if the date actually changed or is appearing
+        if (dateOutput.textContent !== newDateText) {
+            // This trick forces the browser to restart the animation
+            dateOutput.classList.remove('flip');
+            void dateOutput.offsetWidth; // Trigger reflow
+            dateOutput.classList.add('flip');
+            
+            dateOutput.textContent = newDateText;
+        }
         
-        dateOutput.textContent = checkDate.toLocaleDateString(undefined, options);
-        quotaOutput.textContent = `Allowed Quota: ${quota}`;
+        quotaOutput.textContent = Allowed Quota: ${quota};
     }
 </script>
 
