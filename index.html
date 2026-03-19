@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fuel Date Calculator</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+        }
+        h2 { margin-top: 0; }
+        .form-group { margin-bottom: 1.5rem; }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        input[type="text"], select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        input[type="checkbox"] {
+            width: 1.2rem;
+            height: 1.2rem;
+        }
+        .result {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background-color: #eff6ff;
+            border-left: 4px solid var(--primary);
+            border-radius: 6px;
+            display: none; /* Hidden until valid input */
+        }
+        .date-display {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 0.5rem 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Fuel Eligibility Checker</h2>
+    
+    <div class="form-group">
+        <label for="plate">Vehicle Number Plate:</label>
+        <input type="text" id="plate" placeholder="e.g., WP CAA-1234" autocomplete="off">
+    </div>
+
+    <div class="form-group">
+        <label for="type">Vehicle Type:</label>
+        <select id="type">
+            <option value="car">Car / Jeep / Van</option>
+            <option value="bike">Motorcycle / Scooter</option>
+        </select>
+    </div>
+
+    <div class="form-group checkbox-group">
+        <input type="checkbox" id="refueled">
+        <label for="refueled" style="margin: 0;">I have already refueled this week</label>
+    </div>
+
+    <div class="result" id="resultBox">
+        <div>You can refuel next on:</div>
+        <div class="date-display" id="dateOutput">-</div>
+        <div id="quotaOutput">Quota: -</div>
+    </div>
+</div>
+
+<script>
+    // Grab elements from the DOM
+    const plateInput = document.getElementById('plate');
+    const typeInput = document.getElementById('type');
+    const refueledInput = document.getElementById('refueled');
+    const resultBox = document.getElementById('resultBox');
+    const dateOutput = document.getElementById('dateOutput');
+    const quotaOutput = document.getElementById('quotaOutput');
+
+    // Add event listeners to trigger calculation in real-time
+    plateInput.addEventListener('input', calculateDate);
+    typeInput.addEventListener('change', calculateDate);
+    refueledInput.addEventListener('change', calculateDate);
+
+    function calculateDate() {
+        const plate = plateInput.value.trim();
+        const type = typeInput.value;
+        const hasRefueled = refueledInput.checked;
+
+        // 1. Extract the last digit from the number plate using a regular expression
+        const match = plate.match(/\d(?=[^\d]*$)/);
+        
+        if (!match) {
+            resultBox.style.display = 'none'; // Hide if no valid number plate
+            return;
+        }
+
+        resultBox.style.display = 'block'; // Show results
+
+        const lastDigit = parseInt(match[0], 10);
+        const isUserOdd = lastDigit % 2 !== 0; // true if odd, false if even
+
+        let checkDate = new Date(); // Start with today
+        checkDate.setHours(0, 0, 0, 0); // Reset time to midnight for accurate date math
+
+        // 2. Handle the "Reset after Saturday" rule
+        if (hasRefueled) {
+            // Find out how many days until the NEXT Sunday (which is when the new week starts)
+            // getDay() returns 0 for Sunday, 1 for Monday... 6 for Saturday
+            let daysUntilSunday = 7 - checkDate.getDay();
+            
+            // Move the date forward to the start of the next valid week
+            checkDate.setDate(checkDate.getDate() + daysUntilSunday);
+        }
+
+        // 3. Find the exact matching date (Odd/Even)
+        while (true) {
+            const dateNum = checkDate.getDate(); // gets the day of the month (1-31)
+            const isDateOdd = dateNum % 2 !== 0;
+
+            if (isUserOdd === isDateOdd) {
+                // We found a match! Stop looking.
+                break;
+            }
+            // If it doesn't match, add 1 day and check again
+            checkDate.setDate(checkDate.getDate() + 1);
+        }
+
+        // 4. Output the formatting
+        const quota = type === 'car' ? '15 Liters' : '5 Liters';
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        
+        dateOutput.textContent = checkDate.toLocaleDateString(undefined, options);
+        quotaOutput.textContent = `Allowed Quota: ${quota}`;
+    }
+</script>
+
+</body>
+</html>
