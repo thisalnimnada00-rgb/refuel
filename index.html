@@ -3,301 +3,535 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fuel Date Calculator</title>
+    <meta name="description" content="Sri Lanka Fuel Refuel Scheduler - Real-time nearest refuel date based on your number plate, vehicle type & weekly allowance">
+    <title>⛽ FuelFlow SL • Refuel Smart</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@500&amp;display=swap');
+        
         :root {
-            var(--primary): #f59e0b;
-            --primary: #f59e0b;     
-            --bg: #1e293b;          
-            --card-bg: #0f172a;     
-            --text: #f8fafc;        
-            --input-bg: #334155;    
-            --input-border: #475569;
-            --success: #10b981;     
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-            background-image: repeating-linear-gradient(
-                45deg,
-                #1e293b,
-                #1e293b 10px,
-                #1a2433 10px,
-                #1a2433 20px
-            );
-            overflow: hidden; /* Prevents scrollbars from the falling drops */
-        }
-
-        /* --- BACKGROUND FUEL DROPS --- */
-        .drop {
-            position: fixed;
-            width: 15px;
-            height: 15px;
-            background: var(--primary);
-            /* This border-radius creates a teardrop shape! */
-            border-radius: 0 50% 50% 50%;
-            transform: rotate(45deg);
-            top: -50px;
-            z-index: -1; /* Keeps them behind the main card */
-            animation: fall linear infinite;
-            opacity: 0.6;
-            box-shadow: inset -2px -2px 4px rgba(0,0,0,0.3);
-        }
-        @keyframes fall {
-            0% { top: -10%; opacity: 0; }
-            10% { opacity: 0.6; }
-            90% { opacity: 0.6; }
-            100% { top: 110%; opacity: 0; }
-        }
-        /* Position and timing for each drop */
-        .drop:nth-child(1) { left: 10%; animation-duration: 3.2s; animation-delay: 0s; }
-        .drop:nth-child(2) { left: 20%; animation-duration: 4.1s; animation-delay: 1.5s; width: 10px; height: 10px; }
-        .drop:nth-child(3) { left: 85%; animation-duration: 3.8s; animation-delay: 0.5s; }
-        .drop:nth-child(4) { left: 92%; animation-duration: 2.9s; animation-delay: 2.2s; width: 18px; height: 18px; }
-        .drop:nth-child(5) { left: 5%; animation-duration: 4.5s; animation-delay: 3s; width: 12px; height: 12px; }
-        .drop:nth-child(6) { left: 80%; animation-duration: 3.5s; animation-delay: 1.8s; }
-
-        /* --- MAIN CARD --- */
-        .container {
-            background-color: var(--card-bg);
-            padding: 2.5rem;
-            border-radius: 12px;
-            border-top: 5px solid var(--primary); 
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8);
-            max-width: 400px;
-            width: 100%;
-            z-index: 10; /* Keeps card above drops */
-        }
-        h2 { 
-            margin-top: 0; 
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: var(--primary);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .form-group { margin-bottom: 1.5rem; }
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            color: #cbd5e1;
-            text-transform: uppercase;
-            font-size: 0.85rem;
-            letter-spacing: 0.5px;
-        }
-        input[type="text"], select {
-            width: 100%;
-            padding: 0.85rem;
-            background-color: var(--input-bg);
-            border: 2px solid var(--input-border);
-            color: var(--text);
-            border-radius: 6px;
-            box-sizing: border-box;
-            font-size: 1.1rem;
-            font-weight: bold;
-            transition: border-color 0.2s;
-        }
-        input[type="text"]:focus, select:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-        #plate {
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            font-family: monospace;
-        }
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            background-color: var(--input-bg);
-            padding: 1rem;
-            border-radius: 6px;
-            border: 1px solid var(--input-border);
-        }
-        input[type="checkbox"] {
-            width: 1.2rem;
-            height: 1.2rem;
-            accent-color: var(--primary);
-        }
-
-        /* --- FANCY CALENDAR ANIMATIONS --- */
-        .result {
-            margin-top: 2rem;
-            padding: 1.5rem;
-            background-color: rgba(16, 185, 129, 0.1); 
-            border: 2px solid var(--success); 
-            border-radius: 6px;
-            display: none; /* Controlled by JS */
-            text-align: center;
-            transform-origin: top; /* Animates from the top down */
+            --tw-color-fuel-yellow: #facc15;
         }
         
-        /* The pop-in animation for the whole box */
-        @keyframes popIn {
-            0% { transform: scaleY(0); opacity: 0; }
-            70% { transform: scaleY(1.05); opacity: 1; }
-            100% { transform: scaleY(1); opacity: 1; }
-        }
-        .result.show {
-            display: block;
-            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-
-        .result-label {
-            color: #94a3b8;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+        * {
+            transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 150ms;
         }
         
-        /* The 3D flip animation for the text */
-        @keyframes flipText {
-            0% { transform: rotateX(-90deg); opacity: 0; }
-            100% { transform: rotateX(0deg); opacity: 1; }
+        .tail-container * {
+            font-family: 'Inter', system_ui, sans-serif;
         }
-        .date-wrapper {
-            perspective: 1000px; /* Gives the 3D depth to the flip */
+        
+        .heading-font {
+            font-family: 'Space Grotesk', sans-serif;
         }
-        .date-display {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: var(--success);
-            margin: 0.75rem 0;
-            text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
-            display: inline-block;
+        
+        .gas-gradient {
+            background: linear-gradient(90deg, #f59e0b, #fbbf24, #f59e0b);
+            background-size: 200% 200%;
+            animation: gasFlow 4s linear infinite;
         }
-        /* Applied by JS every time the date changes */
-        .date-display.flip {
-            animation: flipText 0.5s ease-out forwards;
+        
+        @keyframes gasFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
-
-        #quotaOutput {
-            display: inline-block;
-            background-color: var(--primary);
-            color: var(--card-bg);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 0.9rem;
-            margin-top: 0.5rem;
+        
+        .fuel-card {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .result-glow {
+            box-shadow: 0 0 60px -15px rgb(250 204 21);
+        }
+        
+        .input-focus {
+            box-shadow: 0 0 0 4px rgba(250, 204, 21, 0.3);
         }
     </style>
 </head>
-<body>
-
-<div class="drop"></div>
-<div class="drop"></div>
-<div class="drop"></div>
-<div class="drop"></div>
-<div class="drop"></div>
-<div class="drop"></div>
-
-<div class="container">
-    <h2>⛽ Fuel Tracker</h2>
-    
-    <div class="form-group">
-        <label for="plate">Vehicle Number Plate</label>
-        <input type="text" id="plate" placeholder="WP CAA-1234" autocomplete="off">
-    </div>
-
-    <div class="form-group">
-        <label for="type">Vehicle Type</label>
-        <select id="type">
-            <option value="car">Car / Jeep / Van</option>
-            <option value="bike">Motorcycle / Scooter</option>
-        </select>
-    </div>
-
-    <div class="form-group checkbox-group">
-        <input type="checkbox" id="refueled">
-        <label for="refueled" style="margin: 0; color: var(--text);">Already refueled this week</label>
-    </div>
-
-    <div class="result" id="resultBox">
-        <div class="result-label">Next Available Date</div>
-        <div class="date-wrapper">
-            <div class="date-display" id="dateOutput">-</div>
-        </div>
-        <div id="quotaOutput">Quota: -</div>
-    </div>
-</div>
-
-<script>
-    const plateInput = document.getElementById('plate');
-    const typeInput = document.getElementById('type');
-    const refueledInput = document.getElementById('refueled');
-    const resultBox = document.getElementById('resultBox');
-    const dateOutput = document.getElementById('dateOutput');
-    const quotaOutput = document.getElementById('quotaOutput');
-    plateInput.addEventListener('input', calculateDate);
-    typeInput.addEventListener('change', calculateDate);
-    refueledInput.addEventListener('change', calculateDate);
-
-    function calculateDate() {
-        const plate = plateInput.value.trim();
-        const type = typeInput.value;
-        const hasRefueled = refueledInput.checked;
-
-        const match = plate.match(/\d(?=[^\d]*$)/);
-        
-        if (!match) {
-            resultBox.classList.remove('show');
-            return;
-        }
-
-        // Add the 'show' class to trigger the box pop-in animation
-        if (!resultBox.classList.contains('show')) {
-            resultBox.classList.add('show');
-        }
-
-        const lastDigit = parseInt(match[0], 10);
-        const isUserOdd = lastDigit % 2 !== 0; 
-
-        let checkDate = new Date(); 
-        checkDate.setHours(0, 0, 0, 0); 
-
-        if (hasRefueled) {
-            let daysUntilSunday = 7 - checkDate.getDay();
-            checkDate.setDate(checkDate.getDate() + daysUntilSunday);
-        }
-
-        while (true) {
-            const dateNum = checkDate.getDate();
-            const isDateOdd = dateNum % 2 !== 0;
-
-            if (isUserOdd === isDateOdd) {
-                break;
-            }
-            checkDate.setDate(checkDate.getDate() + 1);
-        }
-
-        const quota = type === 'car' ? '15 Liters' : '5 Liters';
-        const options = { weekday: 'long', month: 'short', day: 'numeric' }; 
-        const newDateText = checkDate.toLocaleDateString(undefined, options);
-
-        // Only run the text flip animation if the date actually changed or is appearing
-        if (dateOutput.textContent !== newDateText) {
-            // This trick forces the browser to restart the animation
-            dateOutput.classList.remove('flip');
-            void dateOutput.offsetWidth; // Trigger reflow
-            dateOutput.classList.add('flip');
+<body class="tail-container bg-gradient-to-br from-slate-950 via-amber-950 to-black text-white min-h-screen flex flex-col">
+    <!-- Navbar -->
+    <nav class="border-b border-amber-300/20 bg-black/70 backdrop-blur-xl sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
+            <div class="flex items-center gap-x-3">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-300 flex items-center justify-center text-3xl shadow-inner fuel-card">⛽</div>
+                <h1 class="heading-font text-3xl tracking-[-1px]">FuelFlow SL</h1>
+                <span class="px-3 py-1 text-xs font-medium bg-amber-400 text-black rounded-3xl flex items-center gap-x-1 uppercase tracking-widest">
+                    <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                    LIVE
+                </span>
+            </div>
             
-            dateOutput.textContent = newDateText;
+            <div class="hidden md:flex items-center gap-x-8 text-sm font-medium">
+                <a href="#" onclick="showHowItWorks()" class="hover:text-amber-300 flex items-center gap-x-1">
+                    <span>📜</span>
+                    How the rules work
+                </a>
+                <a href="#" class="hover:text-amber-300">Fuel prices today</a>
+                <a href="#" class="hover:text-amber-300">Find stations</a>
+                <div class="h-5 w-px bg-amber-300/30"></div>
+                <div class="flex items-center text-xs uppercase font-mono bg-white/10 px-4 h-9 rounded-3xl">
+                    Sri Lanka • <span id="current-date" class="ml-2 font-semibold"></span>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-x-2">
+                <div onclick="toggleTheme()" class="w-9 h-9 flex items-center justify-center text-2xl cursor-pointer hover:scale-110">🌡️</div>
+                <a href="https://github.com" target="_blank" 
+                   class="flex items-center gap-x-2 bg-white/10 hover:bg-white/20 text-white text-sm font-medium px-5 h-9 rounded-3xl">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 4L2 8l4 4" />
+                    </svg>
+                    GitHub
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="flex-1 max-w-6xl mx-auto w-full px-6 py-10 grid md:grid-cols-12 gap-8">
+        
+        <!-- Input Panel -->
+        <div class="md:col-span-7 bg-white/10 backdrop-blur-3xl rounded-3xl p-8 border border-amber-300/20 shadow-2xl">
+            <div class="flex justify-between items-baseline mb-8">
+                <div>
+                    <h2 class="text-4xl heading-font tracking-[-1px]">When can you refuel next?</h2>
+                    <p class="text-amber-300 mt-1 text-lg">Real-time • No button needed • Gasoline rules applied</p>
+                </div>
+                <div class="text-right">
+                    <div id="last-digit-badge" class="inline-flex items-center gap-x-2 bg-black/60 text-amber-300 text-sm px-4 h-8 rounded-3xl font-mono">
+                        LAST DIGIT: <span id="extracted-digit" class="text-2xl font-semibold text-amber-400">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Number Plate -->
+            <div class="mb-8">
+                <label class="block text-sm uppercase font-medium tracking-widest mb-3 text-amber-300">Your full vehicle number plate</label>
+                <div class="relative">
+                    <input 
+                        id="plate-input"
+                        type="text" 
+                        maxlength="15"
+                        placeholder="e.g. NB-4567 or CA 1234 or 1234"
+                        oninput="handleInput()"
+                        class="w-full bg-white/10 border border-amber-300/30 focus:border-amber-400 input-focus text-3xl font-mono placeholder:text-amber-300/40 rounded-2xl px-8 py-6 text-white outline-none uppercase">
+                    <div class="absolute right-6 top-1/2 -translate-y-1/2 text-amber-400 text-4xl">🚘</div>
+                </div>
+                <p id="plate-hint" class="text-xs mt-2 text-amber-300/70 flex items-center gap-x-1">
+                    <span class="inline-block w-3 h-px bg-amber-300"></span>
+                    We only use the <strong>last digit</strong> for odd/even rule
+                </p>
+            </div>
+
+            <!-- Vehicle Type -->
+            <div class="mb-8">
+                <label class="block text-sm uppercase font-medium tracking-widest mb-3 text-amber-300">Vehicle type</label>
+                <div class="grid grid-cols-2 gap-4" id="vehicle-buttons">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Already refueled -->
+            <div>
+                <label class="block text-sm uppercase font-medium tracking-widest mb-3 text-amber-300">Have you already refueled this week?</label>
+                <div class="flex gap-3" id="refueled-buttons">
+                    <!-- Populated by JS -->
+                </div>
+                <p class="text-xs mt-3 text-amber-300/70">Remember: Your weekly limit resets every Saturday. Answer honestly for accurate results.</p>
+            </div>
+        </div>
+
+        <!-- Result Panel -->
+        <div class="md:col-span-5">
+            <div id="result-panel" class="bg-white/10 backdrop-blur-3xl border border-amber-300/20 rounded-3xl p-8 h-full flex flex-col shadow-2xl result-glow">
+                
+                <!-- Default state -->
+                <div id="default-state" class="flex-1 flex flex-col items-center justify-center text-center">
+                    <div class="text-8xl mb-6 opacity-75">⛽</div>
+                    <h3 class="text-3xl heading-font mb-2">Your next fill-up is...</h3>
+                    <p class="max-w-[220px] text-amber-300">Start typing your plate above. Everything updates instantly as you type.</p>
+                    
+                    <!-- Live clock -->
+                    <div class="mt-12 flex items-center justify-center gap-x-8 text-sm font-mono w-full">
+                        <div class="flex-1 text-center border border-dashed border-amber-300/30 rounded-2xl py-4">
+                            TODAY<br>
+                            <span id="today-display" class="text-4xl font-semibold text-white"></span>
+                        </div>
+                        <div class="text-amber-400 text-2xl">→</div>
+                        <div class="flex-1 text-center border border-dashed border-amber-300/30 rounded-2xl py-4">
+                            YOUR DAY<br>
+                            <span id="next-display-placeholder" class="text-4xl font-semibold text-amber-400">??</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calculated result -->
+                <div id="calculated-result" class="hidden flex-1 flex flex-col">
+                    <div class="flex justify-between items-center mb-6">
+                        <div class="flex items-center gap-x-3">
+                            <span class="text-5xl">📅</span>
+                            <div>
+                                <p class="uppercase text-xs tracking-[1px] text-amber-300">NEXT REFUEL DATE</p>
+                                <h2 id="next-date-big" class="text-5xl heading-font leading-none"></h2>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div id="days-badge" class="inline-flex flex-col items-end">
+                                <span class="text-6xl font-bold text-amber-400" id="days-count"></span>
+                                <span class="text-xs uppercase font-medium text-amber-300">days away</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex-1 bg-gradient-to-br from-amber-400/10 to-transparent border border-amber-400/30 rounded-2xl p-6 flex flex-col justify-between">
+                        <div class="flex justify-between">
+                            <div>
+                                <div class="flex items-center gap-x-2">
+                                    <span id="vehicle-icon" class="text-4xl"></span>
+                                    <span id="vehicle-name" class="font-semibold text-xl"></span>
+                                </div>
+                                <p id="fuel-limit" class="text-5xl font-bold text-amber-400 mt-1"></p>
+                                <p class="text-sm text-amber-300">liters allowed</p>
+                            </div>
+                            
+                            <div class="text-right">
+                                <div id="parity-badge" class="px-5 py-1 bg-white/10 text-white text-sm font-mono rounded-3xl inline-flex items-center gap-x-2">
+                                    <span id="parity-text"></span>
+                                </div>
+                                <p id="plate-last" class="font-mono text-4xl mt-6 text-amber-400"></p>
+                            </div>
+                        </div>
+
+                        <div id="reason-box" class="text-xs leading-relaxed bg-black/40 rounded-2xl p-4 text-amber-300"></div>
+                    </div>
+
+                    <button onclick="copyResult()" 
+                            class="mt-8 flex items-center justify-center gap-x-2 mx-auto text-sm uppercase font-medium hover:text-amber-400">
+                        📋 Copy date to clipboard
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer / Disclaimer -->
+    <div class="max-w-6xl mx-auto w-full px-6 pb-12 text-center text-xs text-amber-300/60">
+        Made for Sri Lankans facing the fuel crisis • Follows current government rules (odd/even dates + Saturday reset) • 
+        <span class="underline cursor-pointer" onclick="showHowItWorks()">Full rules explained</span> • 
+        Not official government tool • Real-time calculation in your browser
+    </div>
+
+    <!-- How it works modal -->
+    <div onclick="if(event.target.id === 'modal'){hideModal()}" 
+         id="modal"
+         class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-[9999] flex items-center justify-center">
+        <div onclick="event.stopImmediatePropagation()" 
+             class="max-w-lg bg-white/10 backdrop-blur-3xl rounded-3xl p-8 mx-4 text-white">
+            <h2 class="heading-font text-3xl mb-6">How FuelFlow works</h2>
+            <div class="space-y-6 text-sm">
+                <div class="flex gap-4">
+                    <div class="text-3xl">1️⃣</div>
+                    <div>
+                        <strong>Odd / Even rule</strong><br>
+                        Your number plate’s last digit decides everything.<br>
+                        Ends in 1,3,5,7,9 → only odd dates (1,3,5…)<br>
+                        Ends in 0,2,4,6,8 → only even dates (2,4,6…)
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="text-3xl">2️⃣</div>
+                    <div>
+                        <strong>Weekly limit resets every Saturday</strong><br>
+                        You get ONE fill-up per week.<br>
+                        No matter what day you filled this week, the limit resets at Saturday.<br>
+                        If you already filled → we calculate from the <strong>next Saturday onward</strong>.
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="text-3xl">3️⃣</div>
+                    <div>
+                        <strong>Car = 15 L • Bike = 5 L</strong><br>
+                        Limits shown exactly as per government announcement.
+                    </div>
+                </div>
+                <p class="text-amber-300 text-xs">FuelFlow automatically finds the soonest allowed date using today’s real date in Sri Lanka time. No forms to submit — it updates live while you type!</p>
+            </div>
+            <button onclick="hideModal()" 
+                    class="mt-8 w-full bg-amber-400 hover:bg-yellow-300 text-black py-4 rounded-3xl font-medium">Got it, thanks!</button>
+        </div>
+    </div>
+
+    <script>
+        // Tailwind CDN initialization
+        function initializeTailwind() {
+            return {
+                config(userConfig = {}) {
+                    return {
+                        configUser: userConfig,
+                        theme: {
+                            extend: {
+                                colors: {
+                                    fuel: '#facc15'
+                                }
+                            }
+                        }
+                    }
+                },
+                theme: {
+                    extend: {}
+                }
+            }
         }
         
-        quotaOutput.textContent = Allowed Quota: ${quota};
-    }
-</script>
-
+        // Core calculation functions
+        function getLastDigit(plate) {
+            if (!plate) return null
+            const cleaned = plate.trim().toUpperCase()
+            const lastChar = cleaned.slice(-1)
+            const digit = parseInt(lastChar)
+            return isNaN(digit) ? null : digit
+        }
+        
+        function getNextSaturdayAfter(date) {
+            let d = new Date(date)
+            const dayOfWeek = d.getDay() // 0 = Sunday, 6 = Saturday
+            let daysToAdd = (6 - dayOfWeek + 7) % 7
+            if (daysToAdd === 0) daysToAdd = 7 // strict after today if today is Saturday
+            d.setDate(d.getDate() + daysToAdd)
+            return d
+        }
+        
+        function findNextAllowedDate(startDate, isOddRequired) {
+            let d = new Date(startDate)
+            // Normalize to midnight
+            d.setHours(0, 0, 0, 0)
+            
+            while (true) {
+                const dayNum = d.getDate()
+                const dayIsOdd = dayNum % 2 === 1
+                if (dayIsOdd === isOddRequired) {
+                    return d
+                }
+                d.setDate(d.getDate() + 1)
+            }
+        }
+        
+        // Global state
+        let selectedVehicle = null
+        let hasRefueled = null
+        let currentPlate = ''
+        
+        // Render vehicle buttons
+        function renderVehicleButtons() {
+            const container = document.getElementById('vehicle-buttons')
+            container.innerHTML = `
+                <button onclick="selectVehicle('car')" id="btn-car"
+                        class="group flex flex-col items-center justify-center border-2 border-transparent hover:border-amber-400 rounded-3xl py-6 bg-white/5 hover:bg-white/10">
+                    <div class="text-6xl mb-2">🚗</div>
+                    <div class="font-semibold text-xl">Car</div>
+                    <div class="text-xs text-amber-300">15 liters</div>
+                </button>
+                
+                <button onclick="selectVehicle('bike')" id="btn-bike"
+                        class="group flex flex-col items-center justify-center border-2 border-transparent hover:border-amber-400 rounded-3xl py-6 bg-white/5 hover:bg-white/10">
+                    <div class="text-6xl mb-2">🏍️</div>
+                    <div class="font-semibold text-xl">Bike</div>
+                    <div class="text-xs text-amber-300">5 liters</div>
+                </button>
+            `
+        }
+        
+        // Render refueled buttons
+        function renderRefueledButtons() {
+            const container = document.getElementById('refueled-buttons')
+            container.innerHTML = `
+                <button onclick="setRefueled(false)" id="btn-no"
+                        class="flex-1 text-center py-5 rounded-3xl border-2 border-transparent hover:border-amber-400 bg-white/5 hover:bg-white/10">
+                    <div class="font-medium text-lg">No</div>
+                    <div class="text-xs text-amber-300 mt-1">I haven’t refueled yet this week</div>
+                </button>
+                <button onclick="setRefueled(true)" id="btn-yes"
+                        class="flex-1 text-center py-5 rounded-3xl border-2 border-transparent hover:border-amber-400 bg-white/5 hover:bg-white/10">
+                    <div class="font-medium text-lg">Yes</div>
+                    <div class="text-xs text-amber-300 mt-1">I already used my weekly allowance</div>
+                </button>
+            `
+        }
+        
+        // Select vehicle
+        function selectVehicle(type) {
+            selectedVehicle = type
+            
+            // Visual feedback
+            document.querySelectorAll('#vehicle-buttons button').forEach(btn => {
+                if ((type === 'car' && btn.id === 'btn-car') || (type === 'bike' && btn.id === 'btn-bike')) {
+                    btn.classList.add('!border-amber-400', 'bg-amber-400/10', 'scale-105')
+                } else {
+                    btn.classList.remove('!border-amber-400', 'bg-amber-400/10', 'scale-105')
+                }
+            })
+            
+            handleInput()
+        }
+        
+        // Set refueled status
+        function setRefueled(value) {
+            hasRefueled = value
+            
+            // Visual feedback
+            document.querySelectorAll('#refueled-buttons button').forEach(btn => {
+                if ((value === false && btn.id === 'btn-no') || (value === true && btn.id === 'btn-yes')) {
+                    btn.classList.add('!border-amber-400', 'bg-amber-400/10', 'scale-105')
+                } else {
+                    btn.classList.remove('!border-amber-400', 'bg-amber-400/10', 'scale-105')
+                }
+            })
+            
+            handleInput()
+        }
+        
+        // Main live calculation
+        function handleInput() {
+            currentPlate = document.getElementById('plate-input').value.trim()
+            
+            // Update last digit badge live
+            const digit = getLastDigit(currentPlate)
+            const badge = document.getElementById('extracted-digit')
+            if (digit !== null) {
+                badge.textContent = digit
+                badge.classList.add('text-amber-400')
+            } else {
+                badge.textContent = '?'
+                badge.classList.remove('text-amber-400')
+            }
+            
+            // Early exit if missing data
+            if (!currentPlate || !selectedVehicle || hasRefueled === null) {
+                showDefaultState()
+                return
+            }
+            
+            const lastDigit = getLastDigit(currentPlate)
+            if (lastDigit === null) {
+                showDefaultState()
+                document.getElementById('plate-hint').innerHTML = `❌ <span class="text-red-400">Number plate must end with a digit 0-9</span>`
+                return
+            }
+            
+            document.getElementById('plate-hint').innerHTML = `<span class="inline-block w-3 h-px bg-amber-300"></span> We only use the <strong>last digit</strong> for odd/even rule`
+            
+            const isOddRequired = lastDigit % 2 === 1
+            const today = new Date()
+            
+            // Determine start date
+            let startDate
+            if (!hasRefueled) {
+                startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+            } else {
+                startDate = getNextSaturdayAfter(today)
+            }
+            
+            // Find next allowed date
+            const nextRefuel = findNextAllowedDate(startDate, isOddRequired)
+            
+            // Calculate days away (accurate)
+            const msPerDay = 1000 * 60 * 60 * 24
+            const daysAway = Math.ceil((nextRefuel.getTime() - today.getTime()) / msPerDay)
+            
+            // Format date nicely
+            const dateOptions = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }
+            const formattedDate = nextRefuel.toLocaleDateString('en-US', dateOptions)
+            
+            // Update UI
+            document.getElementById('default-state').classList.add('hidden')
+            const resultDiv = document.getElementById('calculated-result')
+            resultDiv.classList.remove('hidden')
+            
+            document.getElementById('next-date-big').innerHTML = `
+                ${formattedDate.split(',')[0]}<br>
+                <span class="text-4xl">${formattedDate.split(',')[1]}</span>
+            `
+            document.getElementById('days-count').textContent = daysAway
+            document.getElementById('vehicle-icon').textContent = selectedVehicle === 'car' ? '🚗' : '🏍️'
+            document.getElementById('vehicle-name').textContent = selectedVehicle === 'car' ? 'Car' : 'Bike'
+            document.getElementById('fuel-limit').innerHTML = `${selectedVehicle === 'car' ? '15' : '5'} <span class="text-2xl font-normal">L</span>`
+            document.getElementById('plate-last').textContent = lastDigit
+            document.getElementById('parity-text').innerHTML = `
+                ${isOddRequired ? '🟡 ODD' : '🔵 EVEN'} 
+                <span class="text-[10px] ml-1">DATES</span>
+            `
+            
+            // Reason text
+            let reason = ''
+            if (!hasRefueled) {
+                reason = `✅ Allowance available. First matching ${isOddRequired ? 'odd' : 'even'} date from today.`
+            } else {
+                reason = `⏳ Weekly limit used. We waited until the next Saturday reset, then the first matching ${isOddRequired ? 'odd' : 'even'} date.`
+            }
+            if (daysAway === 0) reason += '<br>🎉 You can refuel <strong>TODAY</strong>!'
+            document.getElementById('reason-box').innerHTML = reason
+        }
+        
+        function showDefaultState() {
+            document.getElementById('calculated-result').classList.add('hidden')
+            document.getElementById('default-state').classList.remove('hidden')
+        }
+        
+        // Copy result
+        function copyResult() {
+            const dateText = document.getElementById('next-date-big').innerText.replace(/\n/g, ' ')
+            const copyText = `I can next refuel on ${dateText} (${document.getElementById('days-count').innerText} days away) — FuelFlow SL`
+            navigator.clipboard.writeText(copyText).then(() => {
+                const orig = event.target.innerHTML
+                event.target.innerHTML = '✅ Copied!'
+                setTimeout(() => { event.target.innerHTML = orig }, 1500)
+            })
+        }
+        
+        // Live date in navbar
+        function updateLiveDate() {
+            const dateEl = document.getElementById('current-date')
+            const todayEl = document.getElementById('today-display')
+            const now = new Date()
+            const options = { weekday: 'short', month: 'short', day: 'numeric' }
+            dateEl.textContent = now.toLocaleDateString('en-US', options).toUpperCase()
+            todayEl.textContent = now.getDate()
+        }
+        
+        // Modal functions
+        function showHowItWorks() {
+            document.getElementById('modal').classList.remove('hidden')
+            document.getElementById('modal').classList.add('flex')
+        }
+        
+        function hideModal() {
+            const modal = document.getElementById('modal')
+            modal.classList.add('hidden')
+            modal.classList.remove('flex')
+        }
+        
+        function toggleTheme() {
+            // Simple fun effect
+            const body = document.body
+            body.style.transitionDuration = '800ms'
+            body.classList.toggle('invert')
+            setTimeout(() => body.classList.remove('invert'), 800)
+        }
+        
+        // Initialize everything
+        window.onload = function () {
+            initializeTailwind()
+            renderVehicleButtons()
+            renderRefueledButtons()
+            updateLiveDate()
+            // Live clock update every 30 seconds
+            setInterval(updateLiveDate, 30000)
+            
+            console.log('%c🚀 FuelFlow SL ready! Real-time refuel calculator for Sri Lanka fuel crisis.', 'background:#facc15;color:#000;font-size:10px;padding:1px 3px;border-radius:2px')
+        }
+    </script>
 </body>
 </html>
